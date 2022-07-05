@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const port = 3001
 
-const persons = [
+let persons = [
   {
     id: 1,
     name: 'Arto Hellas',
@@ -42,13 +42,15 @@ app.get('/api/persons/:id', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-  let infoText
-  if (persons.length === 0) {
-    infoText = 'Phonebook has no entries'
-  } else {
-    infoText = `Phonebook has info for ${persons.length} people`
-  }
+  const infoText = persons.length === 0
+  ? 'Phonebook has no entries' : `Phonebook has info for ${persons.length} people`
   res.send(`<h3>${infoText}</h3>${new Date()}`)
+})
+
+app.delete('/api/persons/:id', (req, res) => {
+  const id = +req.params.id
+  persons = persons.filter((person) => person.id !== id)
+  res.status(204).end()
 })
 
 app.listen(port, () => {
