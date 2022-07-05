@@ -2,6 +2,8 @@ const express = require('express')
 const app = express()
 const port = 3001
 
+app.use(express.json())
+
 let persons = [
   {
     id: 1,
@@ -42,9 +44,27 @@ app.get('/api/persons/:id', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-  const infoText = persons.length === 0
-  ? 'Phonebook has no entries' : `Phonebook has info for ${persons.length} people`
+  const infoText =
+    persons.length === 0
+      ? 'Phonebook has no entries'
+      : `Phonebook has info for ${persons.length} people`
   res.send(`<h3>${infoText}</h3>${new Date()}`)
+})
+
+const getRandomInt = (min, max) => {
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
+app.post('/api/persons', (req, res) => {
+  const body = req.body
+  if (!body.name || !body.number) {
+    return res.status(400).json({ error: 'Missing name or number' })
+  } else if (persons.find((person) => person.name === body.name)) {
+    return res.status(400).json({ error: 'Name must be unique' })
+  }
+  body.id = getRandomInt(100, 9999999)
+  persons = persons.concat(body)
+  res.status(201).send(body)
 })
 
 app.delete('/api/persons/:id', (req, res) => {
