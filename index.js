@@ -31,6 +31,16 @@ app.get('/api/persons', (req, res) => {
   res.json(persons)
 })
 
+app.get('/info', (req, res) => {
+  let infoText
+  if (persons.length === 0) {
+    infoText = 'Phonebook has no entries'
+  } else {
+    infoText = `Phonebook has info for ${persons.length} people`
+  }
+  res.send(`<h3>${infoText}</h3>${new Date()}`)
+})
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`)
 })
