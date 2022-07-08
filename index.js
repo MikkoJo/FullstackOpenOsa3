@@ -1,6 +1,8 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+require('dotenv').config()
+const Person = require('./models/person')
 
 const app = express()
 
@@ -18,7 +20,7 @@ app.use(
   morgan(':method :url :status :res[content-length] - :response-time ms :body')
 )
 
-let persons = [
+/* let persons = [
   {
     id: 1,
     name: 'Arto Hellas',
@@ -39,12 +41,23 @@ let persons = [
     name: 'Mary Poppendic',
     number: '050-658912112',
   },
-]
+] */
 
-app.get('/', (req, res) => res.send('Hello'))
+// Populate DB
+// persons.forEach((person) => {
+//   const newPerson = new Person({
+//     name: person.name,
+//     number: person.number,
+//   })
+//   newPerson.save()
+// })
+
+app.get('/', (req, res) => res.send('Hello, nothing here!'))
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person.find({}).then((persons) => {
+    res.json(persons)
+  })
 })
 
 app.get('/api/persons/:id', (req, res) => {
@@ -65,25 +78,32 @@ app.get('/info', (req, res) => {
   res.send(`<h3>${infoText}</h3>${new Date()}`)
 })
 
-const getRandomInt = (min, max) => {
-  return Math.floor(Math.random() * (max - min) + min)
-}
+// const getRandomInt = (min, max) => {
+//   return Math.floor(Math.random() * (max - min) + min)
+// }
 
 app.post('/api/persons', (req, res) => {
   const body = req.body
   if (!body.name || !body.number) {
     return res.status(400).json({ error: 'Missing name or number' })
-  } else if (persons.find((person) => person.name === body.name)) {
-    return res.status(400).json({ error: 'Name must be unique' })
-  }
-  body.id = getRandomInt(100, 9999999)
-  persons = persons.concat(body)
-  res.status(201).send(body)
+  } // else if (persons.find((person) => person.name === body.name)) {
+  //   return res.status(400).json({ error: 'Name must be unique' })
+  // }
+  // body.id = getRandomInt(100, 9999999)
+  // persons = persons.concat(body)
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
+  person.save().then((savedPerson) => {
+    console.log(savedPerson)
+    res.status(201).json(savedPerson)
+  })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
-  const id = +req.params.id
-  persons = persons.filter((person) => person.id !== id)
+  // const id = +req.params.id
+  // persons = persons.filter((person) => person.id !== id)
   res.status(204).end()
 })
 
