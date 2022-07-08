@@ -72,11 +72,13 @@ app.get('/api/persons/:id', (req, res, next) => {
 })
 
 app.get('/info', (req, res) => {
-  const infoText =
-    persons.length === 0
-      ? 'Phonebook has no entries'
-      : `Phonebook has info for ${persons.length} people`
-  res.send(`<h3>${infoText}</h3>${new Date()}`)
+  Person.find({}).then((persons) => {
+    const infoText =
+      persons.length === 0
+        ? 'Phonebook has no entries'
+        : `Phonebook has info for ${persons.length} people`
+    res.send(`<h3>${infoText}</h3>${new Date()}`)
+  })
 })
 
 // const getRandomInt = (min, max) => {
@@ -100,6 +102,23 @@ app.post('/api/persons', (req, res) => {
     // console.log(savedPerson)
     res.status(201).json(savedPerson)
   })
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body
+  if (!body.name || !body.number) {
+    return res.status(400).json({ error: 'Missing name or number' })
+  }
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      res.json(updatedPerson)
+    })
+    .catch((error) => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
