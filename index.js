@@ -3,6 +3,7 @@ const morgan = require('morgan')
 const cors = require('cors')
 require('dotenv').config()
 const Person = require('./models/person')
+// const { response } = require('express')
 
 const app = express()
 
@@ -60,7 +61,7 @@ app.get('/api/persons', (req, res) => {
   })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   const id = +req.params.id
   const person = persons.find((person) => person.id === id)
   if (person) {
@@ -89,23 +90,35 @@ app.post('/api/persons', (req, res) => {
   } // else if (persons.find((person) => person.name === body.name)) {
   //   return res.status(400).json({ error: 'Name must be unique' })
   // }
-  // body.id = getRandomInt(100, 9999999)
-  // persons = persons.concat(body)
+
   const person = new Person({
     name: body.name,
     number: body.number,
   })
+
   person.save().then((savedPerson) => {
-    console.log(savedPerson)
+    // console.log(savedPerson)
     res.status(201).json(savedPerson)
   })
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  // const id = +req.params.id
-  // persons = persons.filter((person) => person.id !== id)
-  res.status(204).end()
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndDelete(req.params.id)
+    .then((result) => {
+      res.status(204).end()
+    })
+    .catch((error) => next(error))
 })
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message)
+  if (error.name === 'CastError') {
+    return res.status(400).send({ error: 'Malformed id' })
+  }
+
+  next(error)
+}
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
