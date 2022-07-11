@@ -87,7 +87,7 @@ app.get('/info', (req, res) => {
 //   return Math.floor(Math.random() * (max - min) + min)
 // }
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
   if (!body.name || !body.number) {
     return res.status(400).json({ error: 'Missing name or number' })
@@ -100,10 +100,13 @@ app.post('/api/persons', (req, res) => {
     number: body.number,
   })
 
-  person.save().then((savedPerson) => {
-    // console.log(savedPerson)
-    res.status(201).json(savedPerson)
-  })
+  person
+    .save()
+    .then((savedPerson) => {
+      // console.log(savedPerson)
+      res.status(201).json(savedPerson)
+    })
+    .catch((error) => next(error))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
@@ -135,6 +138,8 @@ const errorHandler = (error, req, res, next) => {
   console.error(error.message)
   if (error.name === 'CastError') {
     return res.status(400).send({ error: 'Malformed id' })
+  } else if (error.name === 'ValidationError') {
+    return res.status(400).send({ error: error.message })
   }
 
   next(error)
