@@ -90,7 +90,9 @@ app.get('/info', (req, res) => {
 app.post('/api/persons', (req, res, next) => {
   const body = req.body
   if (!body.name || !body.number) {
-    return res.status(400).json({ error: 'Missing name or number' })
+    return res
+      .status(400)
+      .json({ error: 'Missing name or number', name: 'MissingData' })
   } // else if (persons.find((person) => person.name === body.name)) {
   //   return res.status(400).json({ error: 'Name must be unique' })
   // }
@@ -112,15 +114,26 @@ app.post('/api/persons', (req, res, next) => {
 app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body
   if (!body.name || !body.number) {
-    return res.status(400).json({ error: 'Missing name or number' })
+    return res
+      .status(400)
+      .json({ error: 'Missing name or number', name: 'MissingData' })
   }
   const person = {
     name: body.name,
     number: body.number,
   }
 
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(req.params.id, person, {
+    new: true,
+    runValidators: true,
+    context: 'query',
+  })
     .then((updatedPerson) => {
+      if (updatedPerson === null) {
+        return res
+          .status(400)
+          .json({ error: 'Person not found', name: 'notFaound' })
+      }
       res.json(updatedPerson)
     })
     .catch((error) => next(error))
@@ -137,9 +150,9 @@ app.delete('/api/persons/:id', (req, res, next) => {
 const errorHandler = (error, req, res, next) => {
   console.error(error.message)
   if (error.name === 'CastError') {
-    return res.status(400).send({ error: 'Malformed id' })
+    return res.status(400).send({ error: 'Malformed id', name: error.name })
   } else if (error.name === 'ValidationError') {
-    return res.status(400).send({ error: error.message })
+    return res.status(400).send({ error: error.message, name: error.name })
   }
 
   next(error)
